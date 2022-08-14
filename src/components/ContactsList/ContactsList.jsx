@@ -1,5 +1,9 @@
+import React, { useEffect } from 'react';
+import { useSelector, useDispatch } from 'react-redux';
 import PropTypes from 'prop-types';
+
 import Filter from '../Filter';
+import { deleteItem } from 'redux/phonebookActions';
 
 import {
   Contacts,
@@ -12,18 +16,26 @@ import {
   Marker,
 } from './ContactsList.styled';
 
-const ContactsList = ({
-  filteredContacts,
-  title,
-  filterValue,
-  onFilter,
-  onDelete,
-}) => {
+const ContactsList = ({ title }) => {
+  const contactsList = useSelector(state => state.contacts.items);
+  const filterValue = useSelector(state => state.contacts.filter);
+  const dispatch = useDispatch();
+
+  const getFilteresContacts = filterValue => {
+    return contactsList.filter(contact =>
+      contact.name.toLowerCase().includes(filterValue)
+    );
+  };
+  const filteredContacts = getFilteresContacts(filterValue);
+
+  useEffect(() => {
+    localStorage.setItem('contacts', JSON.stringify(contactsList));
+  }, [contactsList, filterValue]);
+
   return (
     <Contacts>
       <ListTitle>{title}</ListTitle>
-      <Filter filter={filterValue} onFilter={onFilter} />
-
+      <Filter />
       <List>
         {filteredContacts.map(contact => (
           <Contact key={contact.id}>
@@ -33,7 +45,7 @@ const ContactsList = ({
             <DeleteButton
               type="button"
               onClick={() => {
-                onDelete(contact.id);
+                dispatch(deleteItem(contact.id));
               }}
             >
               x Delete
@@ -46,17 +58,7 @@ const ContactsList = ({
 };
 
 ContactsList.propTypes = {
-  filteredContacts: PropTypes.arrayOf(
-    PropTypes.shape({
-      id: PropTypes.string.isRequired,
-      name: PropTypes.string.isRequired,
-      number: PropTypes.string.isRequired,
-    })
-  ),
-  filterValue: PropTypes.string.isRequired,
   title: PropTypes.string.isRequired,
-  onFilter: PropTypes.func.isRequired,
-  onDelete: PropTypes.func.isRequired,
 };
 
 export default ContactsList;
